@@ -2,7 +2,7 @@ import java.util.*;
 import java.util.function.Function;
 
 /**
- * Part one of
+ * Part two of
  * https://adventofcode.com/2019/day/3
  *
  * @author Nerijus
