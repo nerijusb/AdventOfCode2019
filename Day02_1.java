@@ -1,4 +1,4 @@
-import java.util.Arrays;
+import common.IntCodeComputer;
 
 /**
  * Part one of
@@ -11,47 +11,9 @@ public class Day02_1 {
         System.out.println("Program result (at position 0): " + new Day02_1().getResult());
     }
 
-    private int getResult() {
-        return new Program(12, 2).run();
+    private String getResult() {
+        IntCodeComputer computer = new IntCodeComputer(0, Inputs.readString("Day02"));
+        computer.modify("12", "2");
+        return computer.run();
     }
-
-    static class Program {
-        int[] memory;
-
-        Program(int noun, int verb) {
-            this.memory = init();
-            this.memory[1] = noun;
-            this.memory[2] = verb;
-        }
-
-        private int[] init() {
-            return Arrays.stream(Inputs.readString("Day02").split(","))
-                    .mapToInt(Integer::parseInt)
-                    .toArray();
-        }
-
-        int run() {
-            for (int i = 0; i < this.memory.length; i+=4) {
-                int opCode = this.memory[i];
-                if (opCode == 99) {
-                    // end of the program
-                    return this.memory[0];
-                }
-                int argOne = this.memory[this.memory[i + 1]];
-                int argTwo = this.memory[this.memory[i + 2]];
-                int destination = this.memory[i + 3];
-
-                if (opCode == 1) {
-                    this.memory[destination] = argOne + argTwo;
-                } else if (opCode == 2) {
-                    this.memory[destination] = argOne * argTwo;
-                } else {
-                    throw new IllegalStateException("Unexpected operation code: " + opCode);
-                }
-            }
-
-            throw new IllegalStateException("Exit code not found");
-        }
-    }
-
 }
