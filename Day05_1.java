@@ -9,6 +9,6 @@ import common.IntCodeComputer;
 public class Day05_1 {
     public static void main(String[] args) {
         System.out.println("Program diagnostic and output:");
-        new IntCodeComputer(1, Inputs.readString("Day05")).run();
+        new IntCodeComputer(() -> "1", Inputs.readString("Day05")).run();
     }
 }

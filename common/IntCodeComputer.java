@@ -1,13 +1,22 @@
 package common;
 
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 public class IntCodeComputer {
     String[] memory;
-    Integer input;
+    Supplier<String> input;
+    Consumer<String> output;
 
     int currentPosition = 0;
 
-    public IntCodeComputer(Integer input, String memory) {
+    public IntCodeComputer(Supplier<String> input, String memory) {
+        this(input, System.out::println, memory);
+    }
+
+    public IntCodeComputer(Supplier<String> input, Consumer<String> output, String memory) {
         this.input = input;
+        this.output = output;
         this.memory = memory.split(",");
     }
 
@@ -40,12 +49,12 @@ public class IntCodeComputer {
                 int argTwo = instruction.getSecondParamValue(readInt(), this.memory);
                 this.memory[readInt()] = String.valueOf(argOne * argTwo);
             } else if (instruction.isInput()) {//3
-                this.memory[readInt()] = String.valueOf(input);
+                this.memory[readInt()] = input.get();
             } else if (instruction.isOutput()) {//4
                 if (instruction.firstParam == ParameterMode.IMMEDIATE) {
-                    System.out.println(readInt());
+                    output.accept(read());
                 } else {
-                    System.out.println(this.memory[readInt()]);
+                    output.accept(this.memory[readInt()]);
                 }
             } else if (instruction.isJumpIfTrue()) {//5
                 int argOne = instruction.getFirstParamValue(readInt(), this.memory);

@@ -17,7 +17,7 @@ public class Day02_2 extends Day02_1 {
         while (true) {
             String noun = firstDigit(String.valueOf(combination));
             String verb = secondDigit(String.valueOf(combination));
-            IntCodeComputer computer = new IntCodeComputer(0, Inputs.readString("Day02"));
+            IntCodeComputer computer = new IntCodeComputer(() -> "0", Inputs.readString("Day02"));
             computer.modify(noun, verb);
             if (computer.run().equals(targetOutput)) {
                 return 100 * Integer.parseInt(noun) + Integer.parseInt(verb);
