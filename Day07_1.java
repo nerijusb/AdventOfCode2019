@@ -37,30 +37,30 @@ public class Day07_1 {
     }
 
     private void calculateOutput(String phaseAmpA, String phaseAmpB, String phaseAmpC, String phaseAmpD, String phaseAmpE, Consumer<Integer> resultCollector) {
-        new IntCodeComputer(new AmplifierSupplier(phaseAmpA, "0"), (aResult) -> {
-            new IntCodeComputer(new AmplifierSupplier(phaseAmpB, aResult), (bResult) -> {
-                new IntCodeComputer(new AmplifierSupplier(phaseAmpC, bResult), (cResult) -> {
-                    new IntCodeComputer(new AmplifierSupplier(phaseAmpD, cResult), (dResult) -> {
-                        new IntCodeComputer(new AmplifierSupplier(phaseAmpE, dResult), (eResult) -> {
-                            resultCollector.accept(Integer.parseInt(eResult));
-                        }, getInput()).run();
-                    }, getInput()).run();
-                }, getInput()).run();
-            }, getInput()).run();
-        }, getInput()).run();
+        AmplifierSupplier aInput = new AmplifierSupplier(phaseAmpA, "0");
+        AmplifierSupplier bInput = new AmplifierSupplier(phaseAmpB, new IntCodeComputer(getPuzzleInput()).run(aInput).get());
+        AmplifierSupplier cInput = new AmplifierSupplier(phaseAmpC, new IntCodeComputer(getPuzzleInput()).run(bInput).get());
+        AmplifierSupplier dInput = new AmplifierSupplier(phaseAmpD, new IntCodeComputer(getPuzzleInput()).run(cInput).get());
+        AmplifierSupplier eInput = new AmplifierSupplier(phaseAmpE, new IntCodeComputer(getPuzzleInput()).run(dInput).get());
+        resultCollector.accept(Integer.parseInt(new IntCodeComputer(getPuzzleInput()).run(eInput).get()));
     }
 
-    private String getInput() {
-        return Inputs.readString("Day07_demo");
+    String getPuzzleInput() {
+        return Inputs.readString("Day07");
     }
 
     static class AmplifierSupplier implements Supplier<String> {
         private String phase;
         private String input;
 
-        public AmplifierSupplier(String phase, String input) {
+        public AmplifierSupplier(String phase, String initialInput) {
             this.phase = phase;
-            this.input = input;
+            this.input = initialInput;
+        }
+
+        public AmplifierSupplier updateInput(String newInput) {
+            this.input = newInput;
+            return this;
         }
 
         @Override

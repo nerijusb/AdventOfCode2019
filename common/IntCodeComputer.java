@@ -1,22 +1,13 @@
 package common;
 
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class IntCodeComputer {
     String[] memory;
-    Supplier<String> input;
-    Consumer<String> output;
 
     int currentPosition = 0;
 
-    public IntCodeComputer(Supplier<String> input, String memory) {
-        this(input, System.out::println, memory);
-    }
-
-    public IntCodeComputer(Supplier<String> input, Consumer<String> output, String memory) {
-        this.input = input;
-        this.output = output;
+    public IntCodeComputer(String memory) {
         this.memory = memory.split(",");
     }
 
@@ -35,50 +26,82 @@ public class IntCodeComputer {
         return Integer.parseInt(read());
     }
 
-    public String run() {
+    /**
+     * Runs until outputs or halts
+     * @param input input supplier
+     * @return result (output or halt)
+     */
+    public Result run(Supplier<String> input) {
         while (true) {
-            Instruction instruction = new Instruction(this.read());
+            Instruction instruction = new Instruction(read());
             if (instruction.isEnd()) {//99
-                return this.memory[0];
+                return end(memory[0]);
             } else if (instruction.isAddition()) {//1
-                int argOne = instruction.getFirstParamValue(readInt(), this.memory);
-                int argTwo = instruction.getSecondParamValue(readInt(), this.memory);
-                this.memory[readInt()] = String.valueOf(argOne + argTwo);
+                int argOne = instruction.getFirstParamValue(readInt(), memory);
+                int argTwo = instruction.getSecondParamValue(readInt(), memory);
+                memory[readInt()] = String.valueOf(argOne + argTwo);
             } else if (instruction.isMultiplication()) {//2
-                int argOne = instruction.getFirstParamValue(readInt(), this.memory);
-                int argTwo = instruction.getSecondParamValue(readInt(), this.memory);
-                this.memory[readInt()] = String.valueOf(argOne * argTwo);
+                int argOne = instruction.getFirstParamValue(readInt(), memory);
+                int argTwo = instruction.getSecondParamValue(readInt(), memory);
+                memory[readInt()] = String.valueOf(argOne * argTwo);
             } else if (instruction.isInput()) {//3
-                this.memory[readInt()] = input.get();
+                memory[readInt()] = input.get();
             } else if (instruction.isOutput()) {//4
                 if (instruction.firstParam == ParameterMode.IMMEDIATE) {
-                    output.accept(read());
+                    return output(read());
                 } else {
-                    output.accept(this.memory[readInt()]);
+                    return output(memory[readInt()]);
                 }
             } else if (instruction.isJumpIfTrue()) {//5
-                int argOne = instruction.getFirstParamValue(readInt(), this.memory);
-                int argTwo = instruction.getSecondParamValue(readInt(), this.memory);
+                int argOne = instruction.getFirstParamValue(readInt(), memory);
+                int argTwo = instruction.getSecondParamValue(readInt(), memory);
                 if (argOne != 0) {
-                    this.currentPosition = argTwo;
+                    currentPosition = argTwo;
                 }
             } else if (instruction.isJumpIfFalse()) {//6
-                int argOne = instruction.getFirstParamValue(readInt(), this.memory);
-                int argTwo = instruction.getSecondParamValue(readInt(), this.memory);
+                int argOne = instruction.getFirstParamValue(readInt(), memory);
+                int argTwo = instruction.getSecondParamValue(readInt(), memory);
                 if (argOne == 0) {
-                    this.currentPosition = argTwo;
+                    currentPosition = argTwo;
                 }
             } else if (instruction.isLessThan()) {//7
-                int argOne = instruction.getFirstParamValue(readInt(), this.memory);
-                int argTwo = instruction.getSecondParamValue(readInt(), this.memory);
-                this.memory[readInt()] = argOne < argTwo? "1" : "0";
+                int argOne = instruction.getFirstParamValue(readInt(), memory);
+                int argTwo = instruction.getSecondParamValue(readInt(), memory);
+                memory[readInt()] = argOne < argTwo? "1" : "0";
             } else if (instruction.isEquals()) {//8
-                int argOne = instruction.getFirstParamValue(readInt(), this.memory);
-                int argTwo = instruction.getSecondParamValue(readInt(), this.memory);
-                this.memory[readInt()] = argOne == argTwo? "1" : "0";
+                int argOne = instruction.getFirstParamValue(readInt(), memory);
+                int argTwo = instruction.getSecondParamValue(readInt(), memory);
+                memory[readInt()] = argOne == argTwo? "1" : "0";
             } else {
                 throw new IllegalStateException("Unexpected operation: " + instruction.opCode);
             }
+        }
+    }
+
+    private static Result end(String output) {
+        Result result = new Result();
+        result.output = output;
+        result.end = true;
+        return result;
+    }
+
+    private static Result output(String output) {
+        Result result = new Result();
+        result.output = output;
+        result.end = false;
+        return result;
+    }
+
+    public static class Result {
+        String output;
+        boolean end;
+
+        public String get() {
+            return output;
+        }
+
+        public boolean isEnd() {
+            return end;
         }
     }
 
