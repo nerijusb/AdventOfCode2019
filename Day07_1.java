@@ -1,6 +1,7 @@
 import common.IntCodeComputer;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -23,7 +24,9 @@ public class Day07_1 {
                 for (int c = 0; c <= 4; c++) {
                     for (int d = 0; d <= 4; d++) {
                         for (int e = 0; e <= 4; e++) {
-                            calculateOutput(String.valueOf(a), String.valueOf(b), String.valueOf(c), String.valueOf(d), String.valueOf(e), results::add);
+                            if (new HashSet<>(List.of(a, b, c, d, e)).size() == 5) {
+                                calculateOutput(String.valueOf(a), String.valueOf(b), String.valueOf(c), String.valueOf(d), String.valueOf(e), results::add);
+                            }
                         }
                     }
                 }
