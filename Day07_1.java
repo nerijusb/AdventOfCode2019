@@ -38,11 +38,11 @@ public class Day07_1 {
 
     private void calculateOutput(String phaseAmpA, String phaseAmpB, String phaseAmpC, String phaseAmpD, String phaseAmpE, Consumer<Integer> resultCollector) {
         AmplifierSupplier aInput = new AmplifierSupplier(phaseAmpA, "0");
-        AmplifierSupplier bInput = new AmplifierSupplier(phaseAmpB, new IntCodeComputer(getPuzzleInput()).run(aInput).get());
-        AmplifierSupplier cInput = new AmplifierSupplier(phaseAmpC, new IntCodeComputer(getPuzzleInput()).run(bInput).get());
-        AmplifierSupplier dInput = new AmplifierSupplier(phaseAmpD, new IntCodeComputer(getPuzzleInput()).run(cInput).get());
-        AmplifierSupplier eInput = new AmplifierSupplier(phaseAmpE, new IntCodeComputer(getPuzzleInput()).run(dInput).get());
-        resultCollector.accept(Integer.parseInt(new IntCodeComputer(getPuzzleInput()).run(eInput).get()));
+        AmplifierSupplier bInput = new AmplifierSupplier(phaseAmpB, new IntCodeComputer(getPuzzleInput(), aInput).run().get());
+        AmplifierSupplier cInput = new AmplifierSupplier(phaseAmpC, new IntCodeComputer(getPuzzleInput(), bInput).run().get());
+        AmplifierSupplier dInput = new AmplifierSupplier(phaseAmpD, new IntCodeComputer(getPuzzleInput(), cInput).run().get());
+        AmplifierSupplier eInput = new AmplifierSupplier(phaseAmpE, new IntCodeComputer(getPuzzleInput(), dInput).run().get());
+        resultCollector.accept(Integer.parseInt(new IntCodeComputer(getPuzzleInput(), eInput).run().get()));
     }
 
     String getPuzzleInput() {
@@ -58,7 +58,7 @@ public class Day07_1 {
             this.input = initialInput;
         }
 
-        public AmplifierSupplier updateInput(String newInput) {
+        public AmplifierSupplier updateWith(String newInput) {
             this.input = newInput;
             return this;
         }

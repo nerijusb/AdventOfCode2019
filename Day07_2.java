@@ -36,29 +36,20 @@ public class Day07_2 extends Day07_1 {
     }
 
     private void calculateOutput(String phaseAmpA, String phaseAmpB, String phaseAmpC, String phaseAmpD, String phaseAmpE, Consumer<Integer> resultCollector) {
-        AmplifierSupplier aInput = null;
-        IntCodeComputer compA = initComputer();
+        IntCodeComputer compA = initComputer(phaseAmpA);
+        IntCodeComputer compB = initComputer(phaseAmpB);
+        IntCodeComputer compC = initComputer(phaseAmpC);
+        IntCodeComputer compD = initComputer(phaseAmpD);
+        IntCodeComputer compE = initComputer(phaseAmpE);
 
-        AmplifierSupplier bInput = null;
-        IntCodeComputer compB = initComputer();
-
-        AmplifierSupplier cInput = null;
-        IntCodeComputer compC = initComputer();
-
-        AmplifierSupplier dInput = null;
-        IntCodeComputer compD = initComputer();
-
-        AmplifierSupplier eInput = null;
-        IntCodeComputer compE = initComputer();
-
-        String input = "0";
+        String input = "0"; // initial input
         while (true) {
-            aInput = aInput != null? aInput.updateInput(input) : new AmplifierSupplier(phaseAmpA, input);
-            bInput = bInput != null? bInput.updateInput(compA.run(aInput).get()) : new AmplifierSupplier(phaseAmpB, compA.run(aInput).get());
-            cInput = cInput != null? cInput.updateInput(compB.run(bInput).get()) : new AmplifierSupplier(phaseAmpC, compB.run(bInput).get());
-            dInput = dInput != null? dInput.updateInput(compC.run(cInput).get()) : new AmplifierSupplier(phaseAmpD, compC.run(cInput).get());
-            eInput = eInput != null? eInput.updateInput(compD.run(dInput).get()) : new AmplifierSupplier(phaseAmpE, compD.run(dInput).get());
-            IntCodeComputer.Result eOutput = compE.run(eInput);
+            ((AmplifierSupplier)compA.getInput()).updateWith(input);
+            ((AmplifierSupplier)compB.getInput()).updateWith(compA.run().get());
+            ((AmplifierSupplier)compC.getInput()).updateWith(compB.run().get());
+            ((AmplifierSupplier)compD.getInput()).updateWith(compC.run().get());
+            ((AmplifierSupplier)compE.getInput()).updateWith(compD.run().get());
+            IntCodeComputer.Result eOutput = compE.run();
             if (eOutput.isEnd()) {
                 // e halted, return last output
                 resultCollector.accept(Integer.parseInt(input));
@@ -69,7 +60,7 @@ public class Day07_2 extends Day07_1 {
         }
     }
 
-    private IntCodeComputer initComputer() {
-        return new IntCodeComputer(getPuzzleInput());
+    private IntCodeComputer initComputer(String phase) {
+        return new IntCodeComputer(getPuzzleInput(), new AmplifierSupplier(phase, null));
     }
 }

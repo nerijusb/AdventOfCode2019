@@ -9,11 +9,11 @@ import common.IntCodeComputer;
 public class Day05_1 {
     public static void main(String[] args) {
         System.out.println("Program diagnostic and output:");
-        IntCodeComputer computer = new IntCodeComputer(Inputs.readString("Day05"));
-        IntCodeComputer.Result result = computer.run(() -> "1");
+        IntCodeComputer computer = new IntCodeComputer(Inputs.readString("Day05"), () -> "1");
+        IntCodeComputer.Result result = computer.run();
         while (!result.isEnd()) {
             System.out.println(result.get());
-            result = computer.run(() -> "1");
+            result = computer.run();
         }
     }
 }

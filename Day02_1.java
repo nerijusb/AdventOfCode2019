@@ -12,8 +12,8 @@ public class Day02_1 {
     }
 
     private String getResult() {
-        IntCodeComputer computer = new IntCodeComputer(Inputs.readString("Day02"));
+        IntCodeComputer computer = new IntCodeComputer(Inputs.readString("Day02"), () -> "0");
         computer.modify("12", "2");
-        return computer.run(() -> "0").get();
+        return computer.run().get();
     }
 }

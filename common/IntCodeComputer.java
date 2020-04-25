@@ -4,16 +4,22 @@ import java.util.function.Supplier;
 
 public class IntCodeComputer {
     String[] memory;
+    Supplier<String> input;
 
     int currentPosition = 0;
 
-    public IntCodeComputer(String memory) {
+    public IntCodeComputer(String memory, Supplier<String> input) {
         this.memory = memory.split(",");
+        this.input = input;
     }
 
     public void modify(String noun, String verb) {
         this.memory[1] = noun;
         this.memory[2] = verb;
+    }
+
+    public Supplier<String> getInput() {
+        return input;
     }
 
     private String read() {
@@ -28,10 +34,9 @@ public class IntCodeComputer {
 
     /**
      * Runs until outputs or halts
-     * @param input input supplier
      * @return result (output or halt)
      */
-    public Result run(Supplier<String> input) {
+    public Result run() {
         while (true) {
             Instruction instruction = new Instruction(read());
             if (instruction.isEnd()) {//99
