@@ -1,35 +1,44 @@
 package common;
 
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Supplier;
 
+import static java.lang.Integer.parseInt;
+
 public class IntCodeComputer {
-    String[] memory;
+    Map<Integer, String> memory;
     Supplier<String> input;
+    int relativeBase = 0;
+    int pointerPosition = 0;
 
-    int currentPosition = 0;
-
-    public IntCodeComputer(String memory, Supplier<String> input) {
-        this.memory = memory.split(",");
+    public IntCodeComputer(String initialMemory, Supplier<String> input) {
+        this.memory = new HashMap<>();
+        // fill memory with initial values
+        Arrays.stream(initialMemory.split(",")).forEach(i -> memory.put(memory.size(), i));
         this.input = input;
     }
 
     public void modify(String noun, String verb) {
-        this.memory[1] = noun;
-        this.memory[2] = verb;
+        memory.put(1, noun);
+        memory.put(2, verb);
     }
 
     public Supplier<String> getInput() {
         return input;
     }
 
-    private String read() {
-        String value = this.memory[this.currentPosition];
-        this.currentPosition = this.currentPosition + 1;
-        return value;
+    private String read(int position) {
+        String value = memory.get(position);
+        return value != null? value : "0";
     }
 
-    private int readInt() {
-        return Integer.parseInt(read());
+    private String readNext() {
+        String value = read(pointerPosition);
+        pointerPosition = pointerPosition + 1;
+        return value;
     }
 
     /**
@@ -38,48 +47,79 @@ public class IntCodeComputer {
      */
     public Result run() {
         while (true) {
-            Instruction instruction = new Instruction(read());
+            Instruction instruction = new Instruction(readNext());
             if (instruction.isEnd()) {//99
-                return end(memory[0]);
+                return end(read(0));
             } else if (instruction.isAddition()) {//1
-                int argOne = instruction.getFirstParamValue(readInt(), memory);
-                int argTwo = instruction.getSecondParamValue(readInt(), memory);
-                memory[readInt()] = String.valueOf(argOne + argTwo);
+                BigInteger argOne = new BigInteger(getFirstParamValue(instruction));
+                BigInteger argTwo = new BigInteger(getSecondParamValue(instruction));
+                memory.put(getPositionValue(instruction.getThirdParamMode()), argOne.add(argTwo).toString());
             } else if (instruction.isMultiplication()) {//2
-                int argOne = instruction.getFirstParamValue(readInt(), memory);
-                int argTwo = instruction.getSecondParamValue(readInt(), memory);
-                memory[readInt()] = String.valueOf(argOne * argTwo);
+                BigInteger argOne = new BigInteger(getFirstParamValue(instruction));
+                BigInteger argTwo = new BigInteger(getSecondParamValue(instruction));
+                memory.put(getPositionValue(instruction.getThirdParamMode()), argOne.multiply(argTwo).toString());
             } else if (instruction.isInput()) {//3
-                memory[readInt()] = input.get();
+                memory.put(getPositionValue(instruction.getFirstParamMode()), input.get());
             } else if (instruction.isOutput()) {//4
-                if (instruction.firstParam == ParameterMode.IMMEDIATE) {
-                    return output(read());
-                } else {
-                    return output(memory[readInt()]);
-                }
+                return output(getFirstParamValue(instruction));
             } else if (instruction.isJumpIfTrue()) {//5
-                int argOne = instruction.getFirstParamValue(readInt(), memory);
-                int argTwo = instruction.getSecondParamValue(readInt(), memory);
+                int argOne = parseInt(getFirstParamValue(instruction));
+                int argTwo = parseInt(getSecondParamValue(instruction));
                 if (argOne != 0) {
-                    currentPosition = argTwo;
+                    pointerPosition = argTwo;
                 }
             } else if (instruction.isJumpIfFalse()) {//6
-                int argOne = instruction.getFirstParamValue(readInt(), memory);
-                int argTwo = instruction.getSecondParamValue(readInt(), memory);
+                int argOne = parseInt(getFirstParamValue(instruction));
+                int argTwo = parseInt(getSecondParamValue(instruction));
                 if (argOne == 0) {
-                    currentPosition = argTwo;
+                    pointerPosition = argTwo;
                 }
             } else if (instruction.isLessThan()) {//7
-                int argOne = instruction.getFirstParamValue(readInt(), memory);
-                int argTwo = instruction.getSecondParamValue(readInt(), memory);
-                memory[readInt()] = argOne < argTwo? "1" : "0";
+                BigInteger argOne = new BigInteger(getFirstParamValue(instruction));
+                BigInteger argTwo = new BigInteger(getSecondParamValue(instruction));
+                memory.put(getPositionValue(instruction.getThirdParamMode()), argOne.compareTo(argTwo) < 0 ? "1" : "0");
             } else if (instruction.isEquals()) {//8
-                int argOne = instruction.getFirstParamValue(readInt(), memory);
-                int argTwo = instruction.getSecondParamValue(readInt(), memory);
-                memory[readInt()] = argOne == argTwo? "1" : "0";
+                BigInteger argOne = new BigInteger(getFirstParamValue(instruction));
+                BigInteger argTwo = new BigInteger(getSecondParamValue(instruction));
+                memory.put(getPositionValue(instruction.getThirdParamMode()), argOne.compareTo(argTwo) == 0? "1" : "0");
+            } else if (instruction.isAdjustRelativeBase()) {//9
+                int argOne = parseInt(getFirstParamValue(instruction));
+                relativeBase = relativeBase + argOne;
             } else {
                 throw new IllegalStateException("Unexpected operation: " + instruction.opCode);
             }
+        }
+    }
+
+    String getFirstParamValue(Instruction instruction) {
+        return getParamValue(instruction.getFirstParamMode());
+    }
+
+    String getSecondParamValue(Instruction instruction) {
+        return getParamValue(instruction.getSecondParamMode());
+    }
+
+    String getParamValue(ParameterMode paramMode) {
+        String source = readNext();
+        if (paramMode == ParameterMode.IMMEDIATE) {
+            return source;
+        } else if (paramMode == ParameterMode.POSITION) {
+            return read(parseInt(source));
+        } else if (paramMode == ParameterMode.RELATIVE) {
+            return read(relativeBase + parseInt(source));
+        } else {
+            throw new IllegalStateException("Unknown parameter mode type: " + paramMode);
+        }
+    }
+
+    int getPositionValue(ParameterMode paramMode) {
+        String source = readNext();
+        if (paramMode == ParameterMode.IMMEDIATE || paramMode == ParameterMode.POSITION) {
+            return parseInt(source);
+        } else if (paramMode == ParameterMode.RELATIVE) {
+            return relativeBase + parseInt(source);
+        } else {
+            throw new IllegalStateException("Unknown parameter mode type: " + paramMode);
         }
     }
 
@@ -111,37 +151,43 @@ public class IntCodeComputer {
     }
 
     static class Instruction {
+        String source;
         int opCode;
-        ParameterMode firstParam = ParameterMode.POSITION;
-        ParameterMode secondParam = ParameterMode.POSITION;
+        ParameterMode[] paramModes = new ParameterMode[] {
+            ParameterMode.POSITION, // first
+            ParameterMode.POSITION, // second
+            ParameterMode.POSITION, // third
+        };
 
         Instruction(String source) {
+            this.source = source;
             String[] parts = source.split("");
             if (parts.length <= 2) {
-                opCode = Integer.parseInt(source);
+                opCode = parseInt(source);
             } else {
-                opCode = Integer.parseInt(parts[parts.length - 2] + parts[parts.length - 1]);
+                opCode = parseInt(parts[parts.length - 2] + parts[parts.length - 1]);
             }
             if (parts.length >= 3) {
-                firstParam = ParameterMode.from(Integer.parseInt(parts[parts.length - 3]));
+                paramModes[0] = ParameterMode.from(parseInt(parts[parts.length - 3]));
             }
             if (parts.length >= 4) {
-                secondParam = ParameterMode.from(Integer.parseInt(parts[parts.length - 4]));
+                paramModes[1] = ParameterMode.from(parseInt(parts[parts.length - 4]));
+            }
+            if (parts.length >= 5) {
+                paramModes[2] = ParameterMode.from(parseInt(parts[parts.length - 5]));
             }
         }
 
-        int getFirstParamValue(int source, String[] memory) {
-            if (firstParam == ParameterMode.IMMEDIATE) {
-                return source;
-            }
-            return Integer.parseInt(memory[source]);
+        ParameterMode getFirstParamMode() {
+            return paramModes[0];
         }
 
-        int getSecondParamValue(int source, String[] memory) {
-            if (secondParam == ParameterMode.IMMEDIATE) {
-                return source;
-            }
-            return Integer.parseInt(memory[source]);
+        ParameterMode getSecondParamMode() {
+            return paramModes[1];
+        }
+
+        ParameterMode getThirdParamMode() {
+            return paramModes[2];
         }
 
         boolean isAddition() {
@@ -176,6 +222,10 @@ public class IntCodeComputer {
             return opCode == 8;
         }
 
+        boolean isAdjustRelativeBase() {
+            return opCode == 9;
+        }
+
         boolean isEnd() {
             return opCode == 99;
         }
@@ -183,13 +233,19 @@ public class IntCodeComputer {
 
     enum ParameterMode {
         POSITION,
-        IMMEDIATE;
+        IMMEDIATE,
+        RELATIVE;
 
         static ParameterMode from(int mode) {
             if (mode == 0) {
                 return POSITION;
+            } else if (mode == 1) {
+                return IMMEDIATE;
+            } else if (mode == 2) {
+                return RELATIVE;
+            } else {
+                throw new IllegalStateException("Unknown parameter mode: " + mode);
             }
-            return IMMEDIATE;
         }
     }
 }
