@@ -1,5 +1,8 @@
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -10,24 +13,37 @@ import java.util.stream.Collectors;
  */
 public class Day10_1 {
     public static void main(String[] args) {
-        System.out.println("Max asteroids can be detected: " + new Day10_1().getResult());
+        Map.Entry<Position, List<AsteroidInfo>> result = new Day10_1().getResult();
+        System.out.println("Max asteroids can be detected: " + result.getValue().size() + " at (" + result.getKey().x + "," + result.getKey().y + ")");
     }
 
-    private int getResult() {
-        return getAsteroidPositions()
+    private Map.Entry<Position, List<AsteroidInfo>> getResult() {
+        return getAsteroidPositions(getPuzzleInput())
                 .stream()
-                .mapToInt(this::countVisibleAsteroidsFrom)
-                .max()
+                .collect(Collectors.toMap(Function.identity(), a -> getVisibleAsteroids(getPuzzleInput(), a)))
+                .entrySet()
+                .stream()
+                .max((e1, e2) -> Integer.compare(e1.getValue().size(), e2.getValue().size()))
                 .orElseThrow(() -> new IllegalStateException("Could not find max visible asteroids"));
     }
 
-    private int countVisibleAsteroidsFrom(Position station) {
-        List<Position> asteroids = getAsteroidPositions();
-        return asteroids.stream()
+    List<AsteroidInfo> getVisibleAsteroids(String[][] map, Position station) {
+        return getAsteroidPositions(map)
+                .stream()
                 .filter(a -> !a.isSame(station))
-                .map(a -> lineOfSight(station, a))
-                .collect(Collectors.toSet())
-                .size();
+                .map(a -> {
+                    AsteroidInfo info = new AsteroidInfo(a);
+                    info.angle = angle(station, a);
+                    info.lineOfSight = lineOfSight(station, a);
+                    info.distance = distance(station, a);
+                    return info;
+                })
+                .collect(Collectors.groupingBy(i -> i.lineOfSight, Collectors.toList()))
+                .values()
+                .stream()
+                .map(this::closest)
+                .sorted(Comparator.comparing(AsteroidInfo::getAngle))
+                .collect(Collectors.toList());
     }
 
     // calculate a 'line of sight' identifier, that should be equal for the same directional line
@@ -53,8 +69,54 @@ public class Day10_1 {
         return number < 0? "-" : "+";
     }
 
-    private String[][] getPuzzleInput() {
-        List<String> rows = Inputs.readStrings("Day10");
+    private double distance(Position station, Position asteroid) {
+        return Math.abs(asteroid.x - station.x) + Math.abs(asteroid.y - station.y);
+    }
+
+    private double angle(Position station, Position asteroid) {
+        if (station.y.equals(asteroid.y)) {
+            if (asteroid.x < station.x) {
+                // above
+                return 0;
+            } else {
+                // below
+                return 180;
+            }
+        } else if (station.x.equals(asteroid.x)) {
+            if (asteroid.y > station.y) {
+                // to the right
+                return 90;
+            } else {
+                // to the left
+                return 270;
+            }
+        } else {
+            // calculated
+            if (asteroid.x < station.x && asteroid.y > station.y) {
+                return Math.toDegrees(Math.atan(((double) asteroid.y - station.y) / ((double) station.x - asteroid.x)));
+            } else if (asteroid.x > station.x && asteroid.y > station.y) {
+                return Math.toDegrees(Math.atan(((double) asteroid.x - station.x) / ((double) asteroid.y - station.y))) + 90;
+            } else if (asteroid.x > station.x) {
+                return Math.toDegrees(Math.atan(((double) station.y - asteroid.y) / ((double) asteroid.x - station.x))) + 180;
+            } else {
+                return Math.toDegrees(Math.atan(((double) station.x - asteroid.x) / ((double) station.y - asteroid.y))) + 270;
+            }
+        }
+    }
+
+    private AsteroidInfo closest(List<AsteroidInfo> asteroids) {
+        if (asteroids.size() == 1) {
+            return asteroids.get(0);
+        }
+        return asteroids.stream().min(Comparator.comparing(AsteroidInfo::getDistance)).orElseThrow(() -> new IllegalStateException("Could not find closest"));
+    }
+
+    String[][] getPuzzleInput() {
+        return getPuzzleInput("Day10");
+    }
+
+    String[][] getPuzzleInput(String fileName) {
+        List<String> rows = Inputs.readStrings(fileName);
         String[][] map = new String[rows.size()][rows.get(0).length()];
         for (int x = 0; x < rows.size(); x++) {
             String[] row = rows.get(x).split("");
@@ -65,8 +127,7 @@ public class Day10_1 {
         return map;
     }
 
-    private List<Position> getAsteroidPositions() {
-        String[][] map = getPuzzleInput();
+    List<Position> getAsteroidPositions(String[][] map) {
         List<Position> positions = new ArrayList<>();
         for (int x = 0; x < map.length; x++) {
             for (int y = 0; y < map[x].length; y++) {
@@ -79,7 +140,7 @@ public class Day10_1 {
         return positions;
     }
 
-    private static class Position {
+    static class Position {
         Integer x, y;
 
         public Position(int x, int y) {
@@ -90,6 +151,38 @@ public class Day10_1 {
         public boolean isSame(Position position) {
             return position.x.equals(x)
                     && position.y.equals(y);
+        }
+
+        @Override
+        public String toString() {
+            return "(x=" + x + ",y=" + y + ')';
+        }
+    }
+
+    static class AsteroidInfo {
+        Position position;
+        String lineOfSight;
+        double distance;
+        double angle;
+
+        public AsteroidInfo(Position position) {
+            this.position = position;
+        }
+
+        public double getDistance() {
+            return distance;
+        }
+
+        public double getAngle() {
+            return angle;
+        }
+
+        @Override
+        public String toString() {
+            return "(" + position.x + "," + position.y + "): " +
+                    " lineOfSight='" + lineOfSight + "'" +
+                    ", distance=" + distance +
+                    ", angle=" + angle;
         }
     }
 }
