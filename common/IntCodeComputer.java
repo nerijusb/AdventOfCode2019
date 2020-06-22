@@ -14,6 +14,10 @@ public class IntCodeComputer {
     int relativeBase = 0;
     int pointerPosition = 0;
 
+    public IntCodeComputer(String initialMemory) {
+        this(initialMemory, () -> "");
+    }
+
     public IntCodeComputer(String initialMemory, Supplier<String> input) {
         this.memory = new HashMap<>();
         // fill memory with initial values
@@ -39,6 +43,15 @@ public class IntCodeComputer {
         String value = read(pointerPosition);
         pointerPosition = pointerPosition + 1;
         return value;
+    }
+
+    /**
+     * Takes an input supplier and runs until outputs or halts
+     * @return result (output or halt)
+     */
+    public Result run(Supplier<String> input) {
+        this.input = input;
+        return run();
     }
 
     /**
@@ -147,6 +160,14 @@ public class IntCodeComputer {
 
         public boolean isEnd() {
             return end;
+        }
+
+        @Override
+        public String toString() {
+            return "Result{" +
+                    "output='" + output + '\'' +
+                    ", end=" + end +
+                    '}';
         }
     }
 
