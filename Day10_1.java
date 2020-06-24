@@ -1,3 +1,5 @@
+import common.Coordinates;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -13,11 +15,11 @@ import java.util.stream.Collectors;
  */
 public class Day10_1 {
     public static void main(String[] args) {
-        Map.Entry<Position, List<AsteroidInfo>> result = new Day10_1().getResult();
+        Map.Entry<Coordinates, List<AsteroidInfo>> result = new Day10_1().getResult();
         System.out.println("Max asteroids can be detected: " + result.getValue().size() + " at (" + result.getKey().x + "," + result.getKey().y + ")");
     }
 
-    private Map.Entry<Position, List<AsteroidInfo>> getResult() {
+    private Map.Entry<Coordinates, List<AsteroidInfo>> getResult() {
         return getAsteroidPositions(getPuzzleInput())
                 .stream()
                 .collect(Collectors.toMap(Function.identity(), a -> getVisibleAsteroids(getPuzzleInput(), a)))
@@ -27,7 +29,7 @@ public class Day10_1 {
                 .orElseThrow(() -> new IllegalStateException("Could not find max visible asteroids"));
     }
 
-    List<AsteroidInfo> getVisibleAsteroids(String[][] map, Position station) {
+    List<AsteroidInfo> getVisibleAsteroids(String[][] map, Coordinates station) {
         return getAsteroidPositions(map)
                 .stream()
                 .filter(a -> !a.isSame(station))
@@ -47,16 +49,16 @@ public class Day10_1 {
     }
 
     // calculate a 'line of sight' identifier, that should be equal for the same directional line
-    private String lineOfSight(Position station, Position asteroid) {
+    private String lineOfSight(Coordinates station, Coordinates asteroid) {
         // check if on same x or y first
-        if (station.x.equals(asteroid.x)) {
+        if (station.isSameX(asteroid)) {
             return sign(asteroid.y - station.y) + "x";
         }
-        if (station.y.equals(asteroid.y)) {
+        if (station.isSameY(asteroid)) {
             return sign(asteroid.x - station.x) + "y";
         }
         // forms triangle. Get third point
-        Position t = new Position(station.x, asteroid.y);
+        Coordinates t = new Coordinates(station.x, asteroid.y);
 
         int line1 = t.x - asteroid.x;
         int line2 = t.y - station.y;
@@ -69,12 +71,12 @@ public class Day10_1 {
         return number < 0? "-" : "+";
     }
 
-    private double distance(Position station, Position asteroid) {
+    private double distance(Coordinates station, Coordinates asteroid) {
         return Math.abs(asteroid.x - station.x) + Math.abs(asteroid.y - station.y);
     }
 
-    private double angle(Position station, Position asteroid) {
-        if (station.y.equals(asteroid.y)) {
+    private double angle(Coordinates station, Coordinates asteroid) {
+        if (station.isSameY(asteroid)) {
             if (asteroid.x < station.x) {
                 // above
                 return 0;
@@ -82,7 +84,7 @@ public class Day10_1 {
                 // below
                 return 180;
             }
-        } else if (station.x.equals(asteroid.x)) {
+        } else if (station.isSameX(asteroid)) {
             if (asteroid.y > station.y) {
                 // to the right
                 return 90;
@@ -127,45 +129,26 @@ public class Day10_1 {
         return map;
     }
 
-    List<Position> getAsteroidPositions(String[][] map) {
-        List<Position> positions = new ArrayList<>();
+    List<Coordinates> getAsteroidPositions(String[][] map) {
+        List<Coordinates> positions = new ArrayList<>();
         for (int x = 0; x < map.length; x++) {
             for (int y = 0; y < map[x].length; y++) {
                 String type = map[x][y];
                 if ("#".equals(type)) {
-                    positions.add(new Position(x, y));
+                    positions.add(new Coordinates(x, y));
                 }
             }
         }
         return positions;
     }
 
-    static class Position {
-        Integer x, y;
-
-        public Position(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        public boolean isSame(Position position) {
-            return position.x.equals(x)
-                    && position.y.equals(y);
-        }
-
-        @Override
-        public String toString() {
-            return "(x=" + x + ",y=" + y + ')';
-        }
-    }
-
     static class AsteroidInfo {
-        Position position;
+        Coordinates position;
         String lineOfSight;
         double distance;
         double angle;
 
-        public AsteroidInfo(Position position) {
+        public AsteroidInfo(Coordinates position) {
             this.position = position;
         }
 

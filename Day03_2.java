@@ -1,3 +1,5 @@
+import common.Coordinates;
+
 import java.util.*;
 import java.util.function.Function;
 
@@ -15,7 +17,7 @@ public class Day03_2 extends Day03_1 {
 
     private int getResult() {
         List<String> wires = Inputs.readStrings("Day03");
-        Set<Point> intersections = getIntersections(wires);
+        Set<Coordinates> intersections = getIntersections(wires);
         String[] wireOne = wires.get(0).split(",");
         String[] wireTwo = wires.get(1).split(",");
         return intersections.stream()
@@ -24,20 +26,20 @@ public class Day03_2 extends Day03_1 {
                 .orElse(-1);
     }
 
-    private int stepsTo(Point intersection, String[] wire) {
+    private int stepsTo(Coordinates intersection, String[] wire) {
         return trace(wire, (currentPoint) -> !currentPoint.equals(intersection)).size();
     }
 
-    private List<Point> trace(String[] path, Function<Point, Boolean> callback) {
-        List<Point> points = new ArrayList<>();
-        Point lastPoint = new Point(0, 0);
+    private List<Coordinates> trace(String[] path, Function<Coordinates, Boolean> callback) {
+        List<Coordinates> points = new ArrayList<>();
+        Coordinates lastPoint = new Coordinates(0, 0);
         for (String part : path) {
             String direction = part.substring(0, 1);
             int distance = Integer.parseInt(part.replace(direction, ""));
             switch (direction) {
                 case "U":
                     for (int i = 1; i <= distance; i++) {
-                        Point p = new Point(lastPoint.x, lastPoint.y + i);
+                        Coordinates p = new Coordinates(lastPoint.x, lastPoint.y + i);
                         points.add(p);
                         if (!callback.apply(p)) {
                             return points;
@@ -47,7 +49,7 @@ public class Day03_2 extends Day03_1 {
                     break;
                 case "D":
                     for (int i = 1; i <= distance; i++) {
-                        Point p = new Point(lastPoint.x, lastPoint.y - i);
+                        Coordinates p = new Coordinates(lastPoint.x, lastPoint.y - i);
                         points.add(p);
                         if (!callback.apply(p)) {
                             return points;
@@ -57,7 +59,7 @@ public class Day03_2 extends Day03_1 {
                     break;
                 case "L":
                     for (int i = 1; i <= distance; i++) {
-                        Point p = new Point(lastPoint.x - i, lastPoint.y);
+                        Coordinates p = new Coordinates(lastPoint.x - i, lastPoint.y);
                         points.add(p);
                         if (!callback.apply(p)) {
                             return points;
@@ -67,7 +69,7 @@ public class Day03_2 extends Day03_1 {
                     break;
                 case "R":
                     for (int i = 1; i <= distance; i++) {
-                        Point p = new Point(lastPoint.x + i, lastPoint.y);
+                        Coordinates p = new Coordinates(lastPoint.x + i, lastPoint.y);
                         points.add(p);
                         if (!callback.apply(p)) {
                             return points;

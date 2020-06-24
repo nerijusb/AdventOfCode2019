@@ -1,8 +1,9 @@
+import common.Coordinates;
+import common.Direction;
 import common.IntCodeComputer;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Part one of
@@ -68,50 +69,6 @@ public class Day11_1 {
         }
     }
 
-    static class Coordinates {
-        int x;
-        int y;
-
-        public Coordinates(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        public Coordinates adjacent(Direction direction) {
-            switch (direction) {
-                case UP:
-                    return new Coordinates(x, y + 1);
-                case DOWN:
-                    return new Coordinates(x, y - 1);
-                case LEFT:
-                    return new Coordinates(x - 1, y);
-                case RIGHT:
-                    return new Coordinates(x + 1, y);
-                default:
-                    throw new IllegalStateException("Unexpected direction: " + direction);
-            }
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Coordinates that = (Coordinates) o;
-            return x == that.x &&
-                    y == that.y;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(x, y);
-        }
-
-        @Override
-        public String toString() {
-            return "(x=" + x + ", y=" + y + ')';
-        }
-    }
-
     static class Panel {
         Coordinates coordinates;
         String color = ".";// black
@@ -140,33 +97,6 @@ public class Day11_1 {
         @Override
         public String toString() {
             return String.format("%s: color='%s'", coordinates.toString(), color);
-        }
-    }
-
-    enum Direction {
-        UP, DOWN, LEFT, RIGHT;
-
-        Direction rotate(boolean left) {
-            switch (this) {
-                case UP:
-                    return left ? LEFT : RIGHT;
-                case DOWN:
-                    return left ? RIGHT : LEFT;
-                case LEFT:
-                    return left ? DOWN : UP;
-                case RIGHT:
-                    return left ? UP : DOWN;
-                default:
-                    throw new IllegalStateException("Unexpected direction: " + this);
-            }
-        }
-
-        Direction rotateLeft() {
-            return rotate(true);
-        }
-
-        Direction rotateRight() {
-            return rotate(false);
         }
     }
 }

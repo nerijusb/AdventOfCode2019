@@ -1,3 +1,5 @@
+import common.Coordinates;
+
 import java.util.List;
 
 /**
@@ -9,11 +11,11 @@ import java.util.List;
 public class Day10_2 extends Day10_1 {
     public static void main(String[] args) {
         // print full sequence
-        new Day10_2().vaporize(new Position(36,26));
+        new Day10_2().vaporize(new Coordinates(36,26));
         System.out.println("200th asteroid x * 100 + y = " + (8 * 100 + 29));
     }
 
-    private void vaporize(Position station) {
+    private void vaporize(Coordinates station) {
         String[][] map = getPuzzleInput();
         List<AsteroidInfo> visibleAsteroids = getVisibleAsteroids(map, station);
         int counter = 0;

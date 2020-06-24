@@ -1,3 +1,5 @@
+import common.Coordinates;
+
 import java.util.Map;
 import java.util.Set;
 
