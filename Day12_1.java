@@ -1,8 +1,7 @@
-import java.util.List;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Part one of
@@ -15,28 +14,31 @@ public class Day12_1 {
     private static final int STEPS = 1000;
 
     public static void main(String[] args) {
-        System.out.println(String.format("Total energy in the system after %d steps: %d", STEPS, new Day12_1().getResult()));
+        System.out.printf("Total energy in the system after %d steps: %d%n", STEPS, new Day12_1().getResult());
     }
 
     private int getResult() {
-        List<Moon> moons = readMoons("Day12");
+        Moon[] moons = readMoons("Day12");
         for (int i = 0; i < STEPS; i++) {
             simulateStep(moons);
         }
         return getTotalEnergy(moons);
     }
 
-    void simulateStep(List<Moon> moons) {
-        applyGravity(moons);
-        applyVelocity(moons);
+    void simulateStep(Moon[] moons) {
+        // updates velocity
+        applyGravityFor(moons[0], moons);
+        applyGravityFor(moons[1], moons);
+        applyGravityFor(moons[2], moons);
+        applyGravityFor(moons[3], moons);
+        // applies it to position
+        moons[0].applyVelocity();
+        moons[1].applyVelocity();
+        moons[2].applyVelocity();
+        moons[3].applyVelocity();
     }
 
-    // updates velocity
-    private void applyGravity(List<Moon> allMoons) {
-        allMoons.forEach(moon -> applyGravityFor(moon, allMoons));
-    }
-
-    private void applyGravityFor(Moon moon, List<Moon> allMoons) {
+    private void applyGravityFor(Moon moon, Moon[] allMoons) {
         for (Moon otherMoon : allMoons) {
             if (otherMoon.equals(moon)) {
                 continue;
@@ -47,22 +49,15 @@ public class Day12_1 {
         }
     }
 
-    // updates position
-    private void applyVelocity(List<Moon> moons) {
-        for (Moon moon : moons) {
-            moon.position.x = moon.position.x + moon.velocity.x;
-            moon.position.y = moon.position.y + moon.velocity.y;
-            moon.position.z = moon.position.z + moon.velocity.z;
-        }
-    }
-
-    List<Moon> readMoons(String fileName) {
-        return Inputs.readStrings(fileName).stream().map(this::moonFrom).collect(Collectors.toList());
-    }
-
-    private int getTotalEnergy(List<Moon> moons) {
-        return moons
+    Moon[] readMoons(String fileName) {
+        return Inputs.readStrings(fileName)
                 .stream()
+                .map(this::moonFrom)
+                .toArray(Moon[]::new);
+    }
+
+    private int getTotalEnergy(Moon[] moons) {
+        return Arrays.stream(moons)
                 .peek(System.out::println)
                 .mapToInt(Moon::totalEnergy)
                 .sum();
@@ -85,6 +80,12 @@ public class Day12_1 {
 
         public Moon(int x, int y, int z) {
             this.position = new Vector(x, y, z);
+        }
+
+        public void applyVelocity() {
+            position.x = position.x + velocity.x;
+            position.y = position.y + velocity.y;
+            position.z = position.z + velocity.z;
         }
 
         int totalEnergy() {
