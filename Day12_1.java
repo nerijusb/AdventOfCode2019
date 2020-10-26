@@ -1,4 +1,5 @@
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,20 +41,23 @@ public class Day12_1 {
 
     private void applyGravityFor(Moon moon, Moon[] allMoons) {
         for (Moon otherMoon : allMoons) {
-            if (otherMoon.equals(moon)) {
+            if (otherMoon.is(moon)) {
                 continue;
             }
-            moon.velocity.x = moon.velocity.x + Integer.compare(otherMoon.position.x, moon.position.x);
-            moon.velocity.y = moon.velocity.y + Integer.compare(otherMoon.position.y, moon.position.y);
-            moon.velocity.z = moon.velocity.z + Integer.compare(otherMoon.position.z, moon.position.z);
+            moon.velocity.x = moon.velocity.x + Integer.compare(otherMoon.position.x, moon.position.x); // 2028
+            moon.velocity.y = moon.velocity.y + Integer.compare(otherMoon.position.y, moon.position.y); // 5898
+            moon.velocity.z = moon.velocity.z + Integer.compare(otherMoon.position.z, moon.position.z); // 4702
         }
     }
 
     Moon[] readMoons(String fileName) {
-        return Inputs.readStrings(fileName)
-                .stream()
-                .map(this::moonFrom)
-                .toArray(Moon[]::new);
+        List<String> moonSources = Inputs.readStrings(fileName);
+        return new Moon[] {
+            moonFrom(moonSources.get(0), (byte)1),
+            moonFrom(moonSources.get(1), (byte)2),
+            moonFrom(moonSources.get(2), (byte)3),
+            moonFrom(moonSources.get(3), (byte)4)
+        };
     }
 
     private int getTotalEnergy(Moon[] moons) {
@@ -63,22 +67,25 @@ public class Day12_1 {
                 .sum();
     }
 
-    private Moon moonFrom(String source) {
+    private Moon moonFrom(String source, byte id) {
         Matcher matcher = MOON_PATTERN.matcher(source);
         if (!matcher.matches()) {
             throw new IllegalStateException("Could not parse moon info: " + source);
         }
         return new Moon(
+                id,
                 Integer.parseInt(matcher.group(1)),
                 Integer.parseInt(matcher.group(2)),
                 Integer.parseInt(matcher.group(3)));
     }
 
     static class Moon {
+        byte id;
         Vector position;
         Vector velocity = new Vector(0, 0, 0);
 
-        public Moon(int x, int y, int z) {
+        public Moon(byte id, int x, int y, int z) {
+            this.id = id;
             this.position = new Vector(x, y, z);
         }
 
@@ -98,6 +105,25 @@ public class Day12_1 {
 
         private int kineticEnergy() {
             return velocity.absoluteSum();
+        }
+
+        public boolean is(Moon other) {
+            return this.id == other.id;
+        }
+
+        boolean hasSameX(Moon other) {
+            return position.x == other.position.x &&
+                    velocity.x == other.velocity.x;
+        }
+
+        boolean hasSameY(Moon other) {
+            return position.y == other.position.y &&
+                    velocity.y == other.velocity.y;
+        }
+
+        boolean hasSameZ(Moon other) {
+            return position.z == other.position.z &&
+                    velocity.z == other.velocity.z;
         }
 
         @Override
