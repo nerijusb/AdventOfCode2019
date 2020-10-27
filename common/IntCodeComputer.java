@@ -15,7 +15,9 @@ public class IntCodeComputer {
     int pointerPosition = 0;
 
     public IntCodeComputer(String initialMemory) {
-        this(initialMemory, () -> "");
+        this(initialMemory, () -> {
+            throw new IllegalArgumentException("Input not provided");
+        });
     }
 
     public IntCodeComputer(String initialMemory, Supplier<String> input) {
@@ -26,8 +28,12 @@ public class IntCodeComputer {
     }
 
     public void modify(String noun, String verb) {
-        memory.put(1, noun);
-        memory.put(2, verb);
+        modify(1, noun);
+        modify(2, verb);
+    }
+
+    public void modify(int position, String value) {
+        memory.put(position, value);
     }
 
     public Supplier<String> getInput() {

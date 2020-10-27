@@ -23,26 +23,54 @@ public class Day13_1 {
             if (xRun.isEnd()) {
                 break;
             }
-            tiles.add(new Tile(Integer.parseInt(xRun.get()), Integer.parseInt(computer.run().get()), computer.run().get()));
+            tiles.add(new Tile(
+                    Integer.parseInt(xRun.get()),
+                    Integer.parseInt(computer.run().get()),
+                    Integer.parseInt(computer.run().get())));
         }
 
-        return tiles.stream().filter(t -> "2".equals(t.id)).count();
+        return tiles.stream().filter(t -> t.id == 2).count();
     }
 
     static class Tile {
         int x;
         int y;
-        String id;
+        int id;
 
-        public Tile(int x, int y, String id) {
+        public Tile(int x, int y, int id) {
             this.x = x;
             this.y = y;
             this.id = id;
         }
 
+        boolean isBall() {
+            return id == 4;
+        }
+
+        boolean isPaddle() {
+            return id == 3;
+        }
+
+        String displayValue() {
+            switch (id) {
+                case 0:
+                    return " ";
+                case 1:
+                    return "X";
+                case 2:
+                    return ".";
+                case 3:
+                    return "_";
+                case 4:
+                    return "o";
+                default:
+                    throw new IllegalStateException("Unexpected id: " + id);
+            }
+        }
+
         @Override
         public String toString() {
-            return String.format("%s (%d,%d)", id, x, y);
+            return String.format("%d (%d,%d)", id, x, y);
         }
     }
 }
