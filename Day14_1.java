@@ -14,35 +14,39 @@ public class Day14_1 {
     public static final Pattern INGREDIENT_PATTERN = Pattern.compile("(([\\d]+) ([A-Z]+))");
 
     public static void main(String[] args) {
-        System.out.printf("Minimum amount of ORE required to produce 1 FUEL: %d\n", new Day14_1().getResult());
+        System.out.printf("Minimum amount of ORE required to produce 1 FUEL: %.0f\n", new Day14_1().getResult());
     }
 
-    private int getResult() {
+    private double getResult() {
+        Nanofactory nanofactory = buildNanofactory("Day14");
+        nanofactory.produce("FUEL", 1);
+        return nanofactory.getOreConsumed();
+    }
+
+    protected Nanofactory buildNanofactory(String input) {
         // list of formulas
-        List<Formula> formulas = Inputs.readStrings("Day14")
-            .stream()
-            .map(this::toFormula)
-            .collect(Collectors.toList());
+        List<Formula> formulas = Inputs.readStrings(input)
+                .stream()
+                .map(this::toFormula)
+                .collect(Collectors.toList());
 
         Nanofactory nanofactory = new Nanofactory();
         formulas.forEach(f -> nanofactory.materialProducers.put(f.output.type,
                 f.isInputIsOre() ?
                         new BaseMaterialProducer(f, nanofactory) :
                         new CompositeMaterialProducer(f, nanofactory)));
-
-        nanofactory.produce("FUEL", 1);
-        return nanofactory.getOreConsumed();
+        return nanofactory;
     }
 
-    static class Nanofactory {
+    protected static class Nanofactory {
         Map<String, MaterialProducer> materialProducers = new HashMap<>();
 
         void produce(String type, int amount) {
             materialProducers.get(type).produce(amount);
         }
 
-        int getOreConsumed() {
-            return materialProducers.values().stream().mapToInt(mp -> {
+        double getOreConsumed() {
+            return materialProducers.values().stream().mapToDouble(mp -> {
                 if (mp instanceof BaseMaterialProducer) {
                     return ((BaseMaterialProducer)mp).oreConsumed;
                 }
@@ -54,7 +58,7 @@ public class Day14_1 {
     /**
      * Base class for material producer
      */
-    abstract static class MaterialProducer {
+    protected abstract static class MaterialProducer {
         Nanofactory factory;
         String type;
         Formula formula;
@@ -82,7 +86,7 @@ public class Day14_1 {
     /**
      * Produces material from non-base materials
      */
-    static class CompositeMaterialProducer extends MaterialProducer {
+    protected static class CompositeMaterialProducer extends MaterialProducer {
 
         public CompositeMaterialProducer(Formula formula, Nanofactory factory) {
             super(formula, factory);
@@ -98,8 +102,8 @@ public class Day14_1 {
     /**
      * Produces base material (just from ORE)
      */
-    static class BaseMaterialProducer extends MaterialProducer {
-        int oreConsumed = 0;
+    protected static class BaseMaterialProducer extends MaterialProducer {
+        double oreConsumed = 0D;
 
         public BaseMaterialProducer(Formula formula, Nanofactory factory) {
             super(formula, factory);
@@ -114,23 +118,7 @@ public class Day14_1 {
         }
     }
 
-    private Formula toFormula(String source) {
-        String[] parts = source.split("=>");
-        List<Material> inputMaterials = toMaterials(parts[0]);
-        Material outputMaterial = toMaterials(parts[1]).get(0);
-        return new Formula(inputMaterials, outputMaterial);
-    }
-
-    private List<Material> toMaterials(String source) {
-        Matcher matcher = INGREDIENT_PATTERN.matcher(source);
-        List<Material> materials = new ArrayList<>();
-        while (matcher.find()) {
-            materials.add(new Material(matcher.group(3), Integer.parseInt(matcher.group(2))));
-        }
-        return materials;
-    }
-
-    static class Formula {
+    protected static class Formula {
         List<Material> input;
         Material output;
 
@@ -154,7 +142,7 @@ public class Day14_1 {
         }
     }
 
-    static class Material {
+    protected static class Material {
         String type;
         int amount;
 
@@ -171,5 +159,21 @@ public class Day14_1 {
         public String toString() {
             return type + '=' + amount;
         }
+    }
+
+    private Formula toFormula(String source) {
+        String[] parts = source.split("=>");
+        List<Material> inputMaterials = toMaterials(parts[0]);
+        Material outputMaterial = toMaterials(parts[1]).get(0);
+        return new Formula(inputMaterials, outputMaterial);
+    }
+
+    private List<Material> toMaterials(String source) {
+        Matcher matcher = INGREDIENT_PATTERN.matcher(source);
+        List<Material> materials = new ArrayList<>();
+        while (matcher.find()) {
+            materials.add(new Material(matcher.group(3), Integer.parseInt(matcher.group(2))));
+        }
+        return materials;
     }
 }
