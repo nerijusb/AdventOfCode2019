@@ -2,7 +2,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.joining;
@@ -23,34 +22,34 @@ public class Day16_1 {
     }
 
     String getResult() {
-        List<Integer> signal = Arrays.stream(Inputs.readString("Day16").split(""))
+        Integer[] signal = Arrays.stream(Inputs.readString("Day16").split(""))
                 .map(Integer::parseInt)
-                .collect(Collectors.toList());
+                .toArray(Integer[]::new);
 
         // apply 100 phases
         int PHASES = 100;
         signal = applyPhases(signal, PHASES);
 
         // after phases
-        return signal.stream().limit(8).map(n -> Integer.toString(n)).collect(joining(""));
+        return Arrays.stream(signal).limit(8).map(n -> Integer.toString(n)).collect(joining(""));
     }
 
-    static List<Integer> applyPhases(List<Integer> signal, int count) {
+    static Integer[] applyPhases(Integer[] signal, int count) {
         for (int i = 1; i <= count; i++) {
             signal = applyPhase(signal);
         }
         return signal;
     }
 
-    private static List<Integer> applyPhase(List<Integer> signal) {
-        List<Integer> signalAfterPhase = new ArrayList<>(signal.size());
-        IntStream.rangeClosed(1, signal.size()).forEach(position -> {
+    private static Integer[] applyPhase(Integer[] signal) {
+        Integer[] signalAfterPhase = new Integer[signal.length];
+        IntStream.rangeClosed(1, signal.length).parallel().forEach(position -> {
             Pattern pattern = generatePatternFor(position);
             int result = 0;
             for (Integer number : signal) {
                 result = result + number * pattern.get();
             }
-            signalAfterPhase.add(position - 1, lastDigitOf(result));
+            signalAfterPhase[position - 1] = lastDigitOf(result);
         });
         return signalAfterPhase;
     }
