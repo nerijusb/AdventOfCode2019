@@ -23,36 +23,44 @@ public class Day16_1 {
     }
 
     String getResult() {
-        List<Integer> signal = Arrays.stream(Inputs.readString("Day16").split("")).map(Integer::parseInt).collect(Collectors.toList());
+        List<Integer> signal = Arrays.stream(Inputs.readString("Day16").split(""))
+                .map(Integer::parseInt)
+                .collect(Collectors.toList());
+
+        // apply 100 phases
         int PHASES = 100;
-        for (int i = 1; i <= PHASES; i++) {
-            signal = applyPhase(signal);
-        }
+        signal = applyPhases(signal, PHASES);
 
         // after phases
-        return signal.stream().map(n -> Integer.toString(n)).collect(joining(""));
+        return signal.stream().limit(8).map(n -> Integer.toString(n)).collect(joining(""));
     }
 
-    private List<Integer> applyPhase(List<Integer> signal) {
-        List<Integer> signalAfterPhase = new ArrayList<>();
+    static List<Integer> applyPhases(List<Integer> signal, int count) {
+        for (int i = 1; i <= count; i++) {
+            signal = applyPhase(signal);
+        }
+        return signal;
+    }
+
+    private static List<Integer> applyPhase(List<Integer> signal) {
+        List<Integer> signalAfterPhase = new ArrayList<>(signal.size());
         IntStream.rangeClosed(1, signal.size()).forEach(position -> {
             Pattern pattern = generatePatternFor(position);
             int result = 0;
             for (Integer number : signal) {
                 result = result + number * pattern.get();
             }
-            signalAfterPhase.add(lastDigitOf(result));
+            signalAfterPhase.add(position - 1, lastDigitOf(result));
         });
         return signalAfterPhase;
     }
 
-    private Integer lastDigitOf(int result) {
-        String asString = "" + result;
-        String[] parts = asString.split("");
+    private static Integer lastDigitOf(int result) {
+        String[] parts = ("" + result).split("");
         return Integer.valueOf(parts[parts.length - 1]);
     }
 
-    Pattern generatePatternFor(int position) {
+    static Pattern generatePatternFor(int position) {
         List<Integer> generatedPattern = new ArrayList<>();
         for (Integer i : INITIAL_PATTERN) {
             for (int j = 0; j < position; j++) {
