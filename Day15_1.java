@@ -16,10 +16,13 @@ import java.util.Objects;
 public class Day15_1 {
 
     public static void main(String[] args) {
-        System.out.printf("Fewest number of movement commands to the oxygen system location: %d\n", new Day15_1().getResult());
+        Result result = new Day15_1().traverseMap();
+        print(result.map);
+        System.out.printf("Fewest number of movement commands to the oxygen system location: %d\n", result.oxygenSystemDistance);
     }
 
-    private int getResult() {
+    Result traverseMap() {
+        Result result = new Result();
         IntCodeComputer computer = new IntCodeComputer(Inputs.readString("Day15"));
 
         Map<Coordinates, String> visited = new HashMap<>();
@@ -28,26 +31,27 @@ public class Day15_1 {
         currentPath.push(currentPosition);
         visited.put(currentPosition, "S");
 
-        // try move
         walk: while (true) {
-            rotation: for (Movement movement : Movement.values()) {
+            rotate: for (Movement movement : Movement.values()) {
                 log("Next: " + movement.name());
                 Coordinates nextPosition = currentPosition.adjacent(movement.direction);
                 if (visited.containsKey(nextPosition)) {
-                    String msg = "Already been there, continue rotation";
-                    log(msg);
-                    continue rotation;
+                    log("Already been there, continue rotation");
+                    continue rotate;
                 } else {
                     int nextCode = Integer.parseInt(computer.run(() -> movement.code).get());
 
                     if (Status.isGoal(nextCode)) {
-                        visited.put(nextPosition, "G");
-                        log("Found goal position: " + nextPosition.toString());
-                        return currentPath.size();
+                        if (result.oxygenSystemDistance == 0) {
+                            result.oxygenSystemDistance = currentPath.size();
+                            log("Found oxygen system position: " + nextPosition.toString());
+                            visited.put(nextPosition, "G");
+                            currentPath.push(nextPosition);
+                        }
                     } else if (Status.isWall(nextCode)) {
                         log("Wall, continue rotation");
                         visited.put(nextPosition, "#");
-                        continue rotation;
+                        continue rotate;
                     } else if (Status.isMoved(nextCode)) {
                         log("Empty, moved " + movement.name() + " to " + nextPosition.toString());
                         visited.put(nextPosition, ".");
@@ -63,7 +67,8 @@ public class Day15_1 {
             Coordinates to = currentPath.peek();
             if (to == null) {
                 log("Whole map visited");
-                print(visited);
+                result.map = toMap(visited);
+                return result;
             }
             computer.run(() -> movementBackTo(to, from).code); // go back
             currentPosition = to;
@@ -87,7 +92,16 @@ public class Day15_1 {
         }
     }
 
-    void print(Map<Coordinates, String> visited) {
+    static void print(String[][] map) {
+        for (String[] row : map) {
+            for (String value : row) {
+                System.out.print(Objects.requireNonNullElse(value, " "));
+            }
+            System.out.println();
+        }
+    }
+
+    private static String[][] toMap(Map<Coordinates, String> visited) {
         int minX = visited.keySet().stream().mapToInt(v -> v.x).min().orElse(0);
         int minY = visited.keySet().stream().mapToInt(v -> v.y).min().orElse(0);
 
@@ -100,18 +114,16 @@ public class Day15_1 {
         int maxX = visited.keySet().stream().mapToInt(v -> v.x).max().orElse(0);
         int maxY = visited.keySet().stream().mapToInt(v -> v.y).max().orElse(0);
         int dimension = Math.max(maxY, maxX);
+
         String[][] map = new String[dimension + 1][dimension + 1];
+        visited.forEach((key, value) -> map[key.y][key.x] = value);
 
-        visited.forEach((key, value) -> {
-            map[key.y][key.x] = value;
-        });
+        return map;
+    }
 
-        for (int y = 0; y <= dimension; y++) {
-            for (int x = 0; x <= dimension; x++) {
-                System.out.print(Objects.requireNonNullElse(map[y][x], " "));
-            }
-            System.out.println();
-        }
+    static class Result {
+        int oxygenSystemDistance;
+        String[][] map;
     }
 
     enum Movement {
@@ -134,7 +146,7 @@ public class Day15_1 {
         MOVED(1),
         GOAL(2);
 
-        private int code;
+        int code;
 
         Status(int code) {
             this.code = code;

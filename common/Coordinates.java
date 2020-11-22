@@ -1,5 +1,7 @@
 package common;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class Coordinates {
@@ -36,6 +38,14 @@ public class Coordinates {
             default:
                 throw new IllegalStateException("Unexpected direction: " + direction);
         }
+    }
+
+    public List<Coordinates> allAdjacent() {
+        List<Coordinates> coordinates = new ArrayList<>();
+        for (Direction direction : Direction.values()) {
+            coordinates.add(adjacent(direction));
+        }
+        return coordinates;
     }
 
     @Override
